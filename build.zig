@@ -4,13 +4,13 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    comptime var dayNumber: u8 = 1;
+    comptime var dayNumber: u5 = 1;
     inline while (dayNumber <= 1) : (dayNumber += 1) {
         setupDay(b, target, optimize, dayNumber);
     }
 }
 
-fn setupDay(b: *std.Build, target: std.zig.CrossTarget, optimize: std.builtin.OptimizeMode, dayNumber: u8) void {
+fn setupDay(b: *std.Build, target: std.zig.CrossTarget, optimize: std.builtin.OptimizeMode, dayNumber: u5) void {
     const path = b.fmt("day{d:0>2}", .{dayNumber});
     const root = b.fmt("{s}/main.zig", .{path});
     const exe = b.addExecutable(.{

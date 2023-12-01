@@ -33,4 +33,14 @@ fn setupDay(b: *std.Build, target: std.zig.CrossTarget, optimize: std.builtin.Op
 
     const run_step = b.step(b.fmt("run_{s}", .{path}), "Run the specified day");
     run_step.dependOn(&run_cmd.step);
+
+    const test_cmd = b.addTest(.{
+        .name = path,
+        .root_source_file = .{ .path = root },
+        .target = target,
+        .optimize = optimize,
+    });
+    test_cmd.step.dependOn(install_step);
+    const test_step = b.step(b.fmt("test_{s}", .{path}), "Test the specified day");
+    test_step.dependOn(&test_cmd.step);
 }

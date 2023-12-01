@@ -46,98 +46,55 @@ fn part2(line: []const u8) u8 {
                 last = line[idx] - 0x30;
                 idx += 1;
             },
-            'o' => {
+            else => {
                 if (startsWith(u8, line[idx..line.len], "one")) {
-                    idx += 1;
                     if (first) |_| {} else {
                         first = 1;
                     }
-
                     last = 1;
-                } else {
-                    idx += 1;
-                }
-            },
-            't' => {
-                if (startsWith(u8, line[idx..line.len], "two")) {
-                    idx += 1;
+                } else if (startsWith(u8, line[idx..line.len], "two")) {
                     if (first) |_| {} else {
                         first = 2;
                     }
-
                     last = 2;
                 } else if (startsWith(u8, line[idx..line.len], "three")) {
-                    idx += 1;
                     if (first) |_| {} else {
                         first = 3;
                     }
                     last = 3;
-                } else {
-                    idx += 1;
-                }
-            },
-            'f' => {
-                if (startsWith(u8, line[idx..line.len], "four")) {
-                    idx += 1;
+                } else if (startsWith(u8, line[idx..line.len], "four")) {
                     if (first) |_| {} else {
                         first = 4;
                     }
-
                     last = 4;
                 } else if (startsWith(u8, line[idx..line.len], "five")) {
-                    idx += 1;
                     if (first) |_| {} else {
                         first = 5;
                     }
                     last = 5;
-                } else {
-                    idx += 1;
-                }
-            },
-            's' => {
-                if (startsWith(u8, line[idx..line.len], "six")) {
-                    idx += 1;
+                } else if (startsWith(u8, line[idx..line.len], "six")) {
                     if (first) |_| {} else {
                         first = 6;
                     }
-
                     last = 6;
                 } else if (startsWith(u8, line[idx..line.len], "seven")) {
-                    idx += 1;
                     if (first) |_| {} else {
                         first = 7;
                     }
                     last = 7;
-                } else {
-                    idx += 1;
-                }
-            },
-            'e' => {
-                if (startsWith(u8, line[idx..line.len], "eight")) {
-                    idx += 1;
+                } else if (startsWith(u8, line[idx..line.len], "eight")) {
                     if (first) |_| {} else {
                         first = 8;
                     }
-
                     last = 8;
-                } else {
-                    idx += 1;
-                }
-            },
-            'n' => {
-                if (startsWith(u8, line[idx..line.len], "nine")) {
-                    idx += 1;
+                } else if (startsWith(u8, line[idx..line.len], "nine")) {
                     if (first) |_| {} else {
                         first = 9;
                     }
-
                     last = 9;
-                } else {
-                    idx += 1;
                 }
+                idx += 1;
             },
-
-            else => idx += 1,
         }
     }
     return (first orelse 0) * 10 + (last orelse 0);

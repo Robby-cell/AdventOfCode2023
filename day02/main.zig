@@ -1,177 +1,67 @@
 const std = @import("std");
 
 const input = @embedFile("./input.txt");
-// const input =
-//     \\Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
-//     \\Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
-//     \\Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
-//     \\Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
-//     \\Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
-// ;
+
+const Game = struct {
+    id: u8,
+    r: usize = 0,
+    g: usize = 0,
+    b: usize = 0,
+};
 
 pub fn main() void {
-    std.debug.print("{d}\n", .{part2(input)});
+    std.debug.print("{d}\n", .{gatherInfo(input)});
 }
 
-/// find all possible games, and sum the IDs of those games
-fn findPossible(inputStr: []const u8) u32 {
-    var lines = std.mem.split(u8, inputStr, "\n");
+fn gatherInfo(file: []const u8) [2]usize {
+    const eql = std.mem.eql;
 
-    var id: u32 = 1;
-    var total: u32 = 0;
-    while (lines.next()) |line| : (id += 1) {
-        if (possible(line)) {
-            std.debug.print("{d}\n", .{id});
-            total += id;
-        }
-    }
+    var power: usize = 0;
+    var sumValid: usize = 0;
 
-    return total;
-}
+    var lines = std.mem.splitScalar(u8, file, '\n');
 
-fn part2(inputStr: []const u8) u32 {
-    var lines = std.mem.split(u8, inputStr, "\n");
-
-    var total: u32 = 0;
-    while (lines.next()) |line| {
-        total += part2perLine(line);
-    }
-
-    return total;
-}
-
-fn part2perLine(line: []const u8) u32 {
-    if (line.len < 5) return 0;
-
-    // skip game
-    var idx: usize = 0;
     while (true) {
-        switch (line[idx]) {
-            'G', 'a', 'm', 'e' => idx += 1,
-            ' ' => idx += 1,
-            '0'...'9' => idx += 1,
+        const line = lines.next() orelse break;
 
-            ':' => {
-                idx += 2;
-                break;
-            },
+        const id = std.fmt.parseInt(u8, line[5 .. std.mem.indexOf(
+            u8,
+            line,
+            ":",
+        ) orelse break], 10) catch unreachable;
 
-            else => unreachable,
+        var game: Game = .{ .id = id };
+
+        var turns = std.mem.split(u8, line[std.mem.indexOf(
+            u8,
+            line,
+            ":",
+        ).? + 1 ..], "; ");
+        while (true) {
+            const turn = turns.next() orelse break;
+            var colors = std.mem.split(u8, turn, ", ");
+
+            while (true) {
+                const color = colors.next() orelse break;
+                const space = std.mem.indexOf(u8, color, " ").?;
+                if (space == 0) break;
+
+                const count = std.fmt.parseInt(u8, color[0..space], 10) catch unreachable;
+                if (eql(u8, color[space + 1 ..], "red"))
+                    game.r = @max(game.r, count)
+                else if (eql(u8, color[space + 1 ..], "green"))
+                    game.g = @max(game.g, count)
+                else if (eql(u8, color[space + 1 ..], "blue"))
+                    game.b = @max(game.b, count);
+            }
         }
+
+        power += (game.r * game.g * game.b);
+        sumValid += if (game.r <= 12 and game.g <= 13 and game.b <= 14)
+            game.id
+        else
+            0;
     }
 
-    var cachedNumber: u32 = 0;
-    var rgb: [3]u32 = .{ 0, 0, 0 };
-
-    while (idx < line.len) : (idx += 1) {
-        switch (line[idx]) {
-            // skip whitespace
-            ' ' => {},
-
-            '0'...'9' => |char| {
-                cachedNumber = (cachedNumber * 10) + (char - 0x30);
-            },
-
-            'r' => {
-                rgb[0] = @max(rgb[0], cachedNumber);
-                cachedNumber = 0;
-                idx += 2;
-            },
-
-            'g' => {
-                rgb[1] = @max(rgb[1], cachedNumber);
-                cachedNumber = 0;
-                idx += 4;
-            },
-
-            'b' => {
-                rgb[2] = @max(rgb[2], cachedNumber);
-                cachedNumber = 0;
-                idx += 3;
-            },
-
-            ',' => {},
-
-            ';' => {},
-
-            else => unreachable,
-        }
-    }
-    return rgb[0] * rgb[1] * rgb[2];
-}
-
-fn possible(line: []const u8) bool {
-    if (line.len < 5) return false;
-    const isValid = struct {
-        fn valid(rgbValues: [3]u32) bool {
-            if (rgbValues[0] > 12)
-                return false;
-            if (rgbValues[1] > 13)
-                return false;
-            if (rgbValues[2] > 14)
-                return false;
-            return true;
-        }
-    }.valid;
-
-    // skip game
-    var idx: usize = 0;
-    while (true) {
-        switch (line[idx]) {
-            'G', 'a', 'm', 'e' => idx += 1,
-            ' ' => idx += 1,
-            '0'...'9' => idx += 1,
-
-            ':' => {
-                idx += 2;
-                break;
-            },
-
-            else => unreachable,
-        }
-    }
-
-    var cachedNumber: u32 = 0;
-    var rgb: [3]u32 = .{ 0, 0, 0 };
-
-    while (idx < line.len) : (idx += 1) {
-        switch (line[idx]) {
-            // skip whitespace
-            ' ' => {},
-
-            '0'...'9' => |char| {
-                cachedNumber = (cachedNumber * 10) + (char - 0x30);
-            },
-
-            'r' => {
-                rgb[0] = cachedNumber;
-                cachedNumber = 0;
-                idx += 2;
-            },
-
-            'g' => {
-                rgb[1] = cachedNumber;
-                cachedNumber = 0;
-                idx += 4;
-            },
-
-            'b' => {
-                rgb[2] = cachedNumber;
-                cachedNumber = 0;
-                idx += 3;
-            },
-
-            ',' => {},
-
-            ';' => {
-                if (!isValid(rgb))
-                    return false;
-
-                rgb = .{ 0, 0, 0 };
-            },
-
-            else => unreachable,
-        }
-    }
-    return isValid(rgb);
+    return .{ sumValid, power };
 }

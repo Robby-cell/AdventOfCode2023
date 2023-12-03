@@ -1,13 +1,6 @@
 const std = @import("std");
 
 const input = @embedFile("./input.txt");
-// const input =
-//     \\Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
-//     \\Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
-//     \\Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
-//     \\Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
-//     \\Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
-// ;
 
 const Game = struct {
     id: u8,
@@ -25,12 +18,9 @@ fn gatherInfo(file: []const u8) [2]usize {
 
     var power: usize = 0;
     var sumValid: usize = 0;
-
     var lines = std.mem.splitScalar(u8, file, '\n');
 
-    while (true) {
-        const line = lines.next() orelse break;
-
+    while (lines.next()) |line| {
         const id = std.fmt.parseInt(u8, line[5 .. std.mem.indexOf(
             u8,
             line,
@@ -44,14 +34,10 @@ fn gatherInfo(file: []const u8) [2]usize {
             line,
             ":",
         ).? + 2 ..], "; ");
-        while (true) {
-            const turn = turns.next() orelse break;
+        while (turns.next()) |turn| {
             var colors = std.mem.splitSequence(u8, turn, ", ");
 
-            while (true) {
-                const color = colors.next() orelse {
-                    break;
-                };
+            while (colors.next()) |color| {
                 const space = std.mem.indexOf(u8, color, " ").?;
 
                 const count = std.fmt.parseInt(u8, color[0..space], 10) catch unreachable;

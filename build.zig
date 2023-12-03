@@ -5,7 +5,7 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     comptime var dayNumber: u5 = 1;
-    inline while (dayNumber <= 3) : (dayNumber += 1) {
+    inline while (dayNumber <= 4) : (dayNumber += 1) {
         setupDay(b, target, optimize, dayNumber);
     }
 }

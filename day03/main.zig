@@ -12,7 +12,18 @@ const std = @import("std");
 //     \\...$.*....
 //     \\.664.598..
 // ;
-const input = @embedFile("./input.txt");
+
+// const input = @embedFile("./input.txt");
+
+// const input =
+//     \\123..*77.
+//     \\12...*...
+// ;
+
+const input =
+    \\.........*........951...3....*.................623.263.............=.-....122..........................=....519*...........692.......%313...
+    \\........943.......*......$....990.......795..../......*..135.....815.483....*..937*.............................634..............771........
+;
 
 pub fn main() !void {
     var rawGpa: std.heap.GeneralPurposeAllocator(.{}) = .{};
@@ -22,17 +33,21 @@ pub fn main() !void {
     var obj = try Obj.init(allocator, input);
     defer obj.deinit();
 
-    obj.part1();
+    try obj.part1();
 
     // std.debug.print("{s}", .{obj.lines.items});
 }
 
+const Number = struct {
+    line: usize,
+    start: usize,
+    end: usize,
+};
 const Obj = struct {
     const @"lines type" = std.ArrayList([]const u8);
-    const @"numbers type" = std.ArrayList(usize);
 
     lines: @"lines type" = undefined,
-    numbers: @"numbers type" = undefined,
+    numbers: std.AutoHashMap(Number, void) = undefined,
     lineNumber: usize = 0,
     idx: usize = 0,
 
@@ -47,7 +62,7 @@ const Obj = struct {
 
         return .{
             .lines = lines,
-            .numbers = @"numbers type".init(allocator),
+            .numbers = std.AutoHashMap(Number, void).init(allocator),
         };
     }
     /// Free members of the struct
@@ -63,18 +78,16 @@ const Obj = struct {
     }
 
     /// Get all valid numbers
-    fn part1(self: *Obj) void {
-        var sum: usize = 0;
+    fn part1(self: *Obj) !void {
         for (self.lines.items) |line| {
             for (line) |char| {
                 switch (char) {
                     '0'...'9', '.' => {},
                     else => {
                         // get all numbers around this char\
-                        const @"sum around" = self.sumAround();
+                        try self.sumAround();
 
                         // std.debug.print("char: {c} -> {d}\n", .{ char, @"sum around" });
-                        sum += @"sum around";
                     },
                 }
                 self.idx += 1;
@@ -83,24 +96,28 @@ const Obj = struct {
             self.idx = 0;
         }
 
-        std.debug.print("{d}\n", .{sum});
+        var items = self.numbers.iterator();
+        var total: usize = 0;
+        while (items.next()) |item| {
+            const key = item.key_ptr;
+            total += std.fmt.parseInt(usize, self.lines.items[key.line][key.start..key.end], 10) catch unreachable;
+        }
+        std.debug.print("{d}\n", .{total});
     }
 
     /// Sum of all numbers around a point
-    fn sumAround(self: Obj) usize {
-        const top = if (self.lineNumber > 0) blk: {
+    fn sumAround(self: *Obj) !void {
+        if (self.lineNumber > 0) {
             const line = self.lines.items[self.lineNumber - 1];
-            const sum = self.sumPeaks(line);
-            break :blk sum;
-        } else 0;
-        const bottom = if (self.lineNumber >= self.lines.items.len) 0 else blk: {
+            try self.sumPeaks(line, self.lineNumber - 1);
+        }
+        if (self.lineNumber + 1 < self.lines.items.len) {
             const line = self.lines.items[self.lineNumber + 1];
-            const sum = self.sumPeaks(line);
-            break :blk sum;
-        };
+            try self.sumPeaks(line, self.lineNumber + 1);
+        }
 
-        const left = switch (Token.fromChar(self.lines.items[self.lineNumber][self.idx - 1])) {
-            .number => blk: {
+        switch (Token.fromChar(self.lines.items[self.lineNumber][self.idx - 1])) {
+            .number => {
                 var start: usize = self.idx - 1;
                 while (start > 0) {
                     switch (Token.fromChar(self.lines.items[self.lineNumber][start - 1])) {
@@ -108,14 +125,12 @@ const Obj = struct {
                         else => break,
                     }
                 }
-                const number = std.fmt.parseInt(usize, self.lines.items[self.lineNumber][start..self.idx], 10) catch unreachable;
-                std.debug.print("num: {d}\n", .{number});
-                break :blk number;
+                try self.numbers.put(.{ .start = start, .end = self.idx, .line = self.lineNumber }, undefined);
             },
-            else => 0,
-        };
-        const right = switch (Token.fromChar(self.lines.items[self.lineNumber][self.idx + 1])) {
-            .number => blk: {
+            else => {},
+        }
+        switch (Token.fromChar(self.lines.items[self.lineNumber][self.idx + 1])) {
+            .number => {
                 var end: usize = self.idx + 1;
                 while (end > 0) {
                     switch (Token.fromChar(self.lines.items[self.lineNumber][end + 1])) {
@@ -123,72 +138,56 @@ const Obj = struct {
                         else => break,
                     }
                 }
-                const number = std.fmt.parseInt(usize, self.lines.items[self.lineNumber][self.idx + 1 .. end + 1], 10) catch unreachable;
-                std.debug.print("num: {d}\n", .{number});
-                break :blk number;
+                try self.numbers.put(.{ .start = self.idx + 1, .end = end + 1, .line = self.lineNumber }, undefined);
             },
-            else => 0,
-        };
-
-        return top + bottom + left + right;
+            else => {},
+        }
     }
-    fn sumPeaks(self: Obj, line: []const u8) usize {
+    fn sumPeaks(self: *Obj, line: []const u8, lineNumber: usize) !void {
         // std.debug.print("line: {s}\n", .{line});
-        const middleOccupied = Token.fromChar(line[self.idx]) == .number;
 
-        const left = blk: {
-            switch (Token.fromChar(line[self.idx - 1])) {
-                .number => {
-                    var start: usize = self.idx - 1;
-                    while (start > 0) {
-                        switch (Token.fromChar(line[start - 1])) {
-                            .number => start -= 1,
-                            else => break,
-                        }
+        switch (Token.fromChar(line[self.idx - 1])) {
+            .number => {
+                var start: usize = self.idx - 1;
+                while (start > 0) {
+                    switch (Token.fromChar(line[start - 1])) {
+                        .number => start -= 1,
+                        else => break,
                     }
-                    var end: usize = self.idx - 1;
-                    while (end < line.len) {
-                        switch (Token.fromChar(line[end + 1])) {
-                            .number => end += 1,
-                            else => break,
-                        }
+                }
+                var end: usize = self.idx - 1;
+                while (end < line.len) {
+                    switch (Token.fromChar(line[end + 1])) {
+                        .number => end += 1,
+                        else => break,
                     }
-                    const number = std.fmt.parseInt(usize, line[start .. end + 1], 10) catch unreachable;
-                    std.debug.print("num: {d}\n", .{number});
-                    break :blk number;
-                },
-                else => break :blk 0,
-            }
-        };
+                }
+                try self.numbers.put(.{ .start = start, .end = end + 1, .line = lineNumber }, undefined);
+            },
+            else => {},
+        }
 
         var start: usize = self.idx + 1;
-        const right: usize = blk: {
-            if (middleOccupied and left != 0) break :blk 0;
-            switch (Token.fromChar(line[start])) {
-                .number => {
-                    while (start >= self.idx - 1) {
-                        switch (Token.fromChar(line[start - 1])) {
-                            .number => start -= 1,
-                            else => break,
-                        }
+        switch (Token.fromChar(line[start])) {
+            .number => {
+                while (start >= self.idx - 1) {
+                    switch (Token.fromChar(line[start - 1])) {
+                        .number => start -= 1,
+                        else => break,
                     }
+                }
 
-                    var end: usize = start + 1;
-                    while (end < line.len) {
-                        switch (Token.fromChar(line[end])) {
-                            .number => end += 1,
-                            else => break,
-                        }
+                var end: usize = start + 1;
+                while (end < line.len) {
+                    switch (Token.fromChar(line[end])) {
+                        .number => end += 1,
+                        else => break,
                     }
-                    const number = std.fmt.parseInt(usize, line[start..end], 10) catch unreachable;
-                    std.debug.print("num: {d}\n", .{number});
-                    break :blk number;
-                },
-                else => break :blk 0,
-            }
-        };
-
-        return left + right;
+                }
+                try self.numbers.put(.{ .start = start, .end = end, .line = lineNumber }, undefined);
+            },
+            else => {},
+        }
     }
 
     fn sumNumbers(self: Obj) usize {

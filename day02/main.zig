@@ -1,6 +1,13 @@
 const std = @import("std");
 
 const input = @embedFile("./input.txt");
+// const input =
+//     \\Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+//     \\Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+//     \\Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+//     \\Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+//     \\Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
+// ;
 
 const Game = struct {
     id: u8,
@@ -36,13 +43,15 @@ fn gatherInfo(file: []const u8) [2]usize {
             u8,
             line,
             ":",
-        ).? + 1 ..], "; ");
+        ).? + 2 ..], "; ");
         while (true) {
             const turn = turns.next() orelse break;
-            var colors = std.mem.split(u8, turn, ", ");
+            var colors = std.mem.splitSequence(u8, turn, ", ");
 
             while (true) {
-                const color = colors.next() orelse break;
+                const color = colors.next() orelse {
+                    break;
+                };
                 const space = std.mem.indexOf(u8, color, " ").?;
                 if (space == 0) break;
 
@@ -57,10 +66,9 @@ fn gatherInfo(file: []const u8) [2]usize {
         }
 
         power += (game.r * game.g * game.b);
-        sumValid += if (game.r <= 12 and game.g <= 13 and game.b <= 14)
-            game.id
-        else
-            0;
+        sumValid += if (game.r <= 12 and game.g <= 13 and game.b <= 14) blk: {
+            break :blk game.id;
+        } else 0;
     }
 
     return .{ sumValid, power };

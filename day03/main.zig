@@ -22,21 +22,24 @@ pub fn main() !void {
     var obj = try Obj.init(allocator, input);
     defer obj.deinit();
 
-    try obj.getNumbers();
+    obj.part1();
 
     // std.debug.print("{s}", .{obj.lines.items});
 }
 
 const Obj = struct {
-    lines: std.ArrayList([]const u8) = undefined,
-    numbers: std.ArrayList(usize) = undefined,
-    line: usize = 0,
+    const @"lines type" = std.ArrayList([]const u8);
+    const @"numbers type" = std.ArrayList(usize);
+
+    lines: @"lines type" = undefined,
+    numbers: @"numbers type" = undefined,
+    lineNumber: usize = 0,
     idx: usize = 0,
 
     /// Initialize the struct, splits the buffer into its lines and stores
     /// in `std.ArrayList([]const u8)`
     fn init(allocator: std.mem.Allocator, buffer: []const u8) !Obj {
-        var lines = std.ArrayList([]const u8).init(allocator);
+        var lines = @"lines type".init(allocator);
         var splitLines = std.mem.splitSequence(u8, buffer, "\n");
         while (splitLines.next()) |line| {
             try lines.append(line);
@@ -44,7 +47,7 @@ const Obj = struct {
 
         return .{
             .lines = lines,
-            .numbers = std.ArrayList(usize).init(allocator),
+            .numbers = @"numbers type".init(allocator),
         };
     }
     /// Free members of the struct
@@ -52,9 +55,35 @@ const Obj = struct {
         self.numbers.deinit();
         self.lines.deinit();
     }
+    /// Reset to do part 2
+    fn reset(self: *Obj) void {
+        self.numbers.clearAndFree();
+        self.lineNumber = 0;
+        self.idx = 0;
+    }
 
     /// Get all valid numbers
-    fn getNumbers(self: *Obj) !void {
-        _ = self;
+    fn part1(self: *Obj) void {
+        for (self.lines.items) |line| {
+            for (line) |char| {
+                switch (char) {
+                    '0'...'9', '.' => {},
+                    else => {
+                        // get all numbers around this char
+                    },
+                }
+                self.idx += 1;
+            }
+            self.lineNumber += 1;
+            self.idx = 0;
+        }
+    }
+
+    fn sumNumbers(self: Obj) usize {
+        var total: usize = 0;
+        for (self.numbers.items) |number| {
+            total += number;
+        }
+        return total;
     }
 };

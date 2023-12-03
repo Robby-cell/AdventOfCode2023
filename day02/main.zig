@@ -53,7 +53,6 @@ fn gatherInfo(file: []const u8) [2]usize {
                     break;
                 };
                 const space = std.mem.indexOf(u8, color, " ").?;
-                if (space == 0) break;
 
                 const count = std.fmt.parseInt(u8, color[0..space], 10) catch unreachable;
                 if (eql(u8, color[space + 1 ..], "red"))
@@ -66,9 +65,7 @@ fn gatherInfo(file: []const u8) [2]usize {
         }
 
         power += (game.r * game.g * game.b);
-        sumValid += if (game.r <= 12 and game.g <= 13 and game.b <= 14) blk: {
-            break :blk game.id;
-        } else 0;
+        sumValid += if (game.r <= 12 and game.g <= 13 and game.b <= 14) game.id else 0;
     }
 
     return .{ sumValid, power };

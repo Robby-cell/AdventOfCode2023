@@ -14,26 +14,42 @@ const NumList = std.ArrayList(u8);
 const input = @embedFile("./input.txt");
 
 pub fn main() !void {
-    var rawGpa: std.heap.GeneralPurposeAllocator(.{}) = .{};
-    defer _ = rawGpa.deinit();
-    const allocator = rawGpa.allocator();
+    var arenaAllocator = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer _ = arenaAllocator.deinit();
+    const allocator = arenaAllocator.allocator();
     var gameLines = std.mem.splitScalar(u8, input, '\n');
     var total: usize = 0;
 
+    var games = std.ArrayList(Game).init(allocator);
+    defer games.deinit();
+
     while (gameLines.next()) |line| {
+        // dont need to cleanup becaus arena is used
         var game = try Game.fromLine(line, allocator);
-        defer game.deinit();
         game.getPoints();
+
+        try games.append(game);
+
         total += game.points;
     }
 
-    std.debug.print("{d}\n", .{total});
+    for (games.items, 0..) |game, idx| {
+        for (idx + 1..idx + 1 + game.matches) |i| {
+            games.items[i].entries += game.entries;
+        }
+    }
+
+    var tickets: usize = 0;
+    for (games.items) |game| {
+        tickets += game.entries;
+    }
 }
 
 const Game = struct {
     winning: NumMap,
     picked: NumList,
 
+    entries: u32 = 1,
     matches: u32 = 0,
 
     points: u32 = 0,

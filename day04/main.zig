@@ -54,13 +54,12 @@ const Game = struct {
             const beginWinning = std.mem.indexOf(u8, line, ":").? + 1;
             const endWinning = std.mem.indexOf(u8, line, "|").? - 1;
             const winningLine = line[beginWinning..endWinning];
-            var winningIter = std.mem.splitScalar(u8, winningLine, ' ');
+            var winningIter = std.mem.tokenizeScalar(u8, winningLine, ' ');
 
             var winningMap = NumMap.init(allocator);
             errdefer winningMap.deinit();
 
             while (winningIter.next()) |number| {
-                if (number.len < 1) continue;
                 try winningMap.put(try std.fmt.parseInt(u8, number, 10), undefined);
             }
             break :blk winningMap;
@@ -69,13 +68,12 @@ const Game = struct {
 
         const picked = blk: {
             const beginPicked = std.mem.indexOf(u8, line, "|").? + 2;
-            var pickedIter = std.mem.splitScalar(u8, line[beginPicked..], ' ');
+            var pickedIter = std.mem.tokenizeScalar(u8, line[beginPicked..], ' ');
 
             var picked = NumList.init(allocator);
             errdefer picked.deinit();
 
             while (pickedIter.next()) |number| {
-                if (number.len < 1) continue;
                 try picked.append(try std.fmt.parseInt(u8, number, 10));
             }
 

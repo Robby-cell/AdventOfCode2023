@@ -4,8 +4,18 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    comptime var dayNumber: u5 = 1;
-    inline while (dayNumber <= 4) : (dayNumber += 1) {
+    @"add zig"(1, 5, b, target, optimize);
+}
+
+fn @"add zig"(
+    comptime from: u5,
+    comptime to: u5,
+    b: *std.Build,
+    target: std.zig.CrossTarget,
+    optimize: std.builtin.OptimizeMode,
+) void {
+    comptime var dayNumber = from;
+    inline while (dayNumber <= to) : (dayNumber += 1) {
         setupDay(b, target, optimize, dayNumber);
     }
 }

@@ -1,48 +1,14 @@
 const std = @import("std");
 
-const input =
-    \\seeds: 79 14 55 13
-    \\
-    \\seed-to-soil map:
-    \\50 98 2
-    \\52 50 48
-    \\
-    \\soil-to-fertilizer map:
-    \\0 15 37
-    \\37 52 2
-    \\39 0 15
-    \\
-    \\fertilizer-to-water map:
-    \\49 53 8
-    \\0 11 42
-    \\42 0 7
-    \\57 7 4
-    \\
-    \\water-to-light map:
-    \\88 18 7
-    \\18 25 70
-    \\
-    \\light-to-temperature map:
-    \\45 77 23
-    \\81 45 19
-    \\68 64 13
-    \\
-    \\temperature-to-humidity map:
-    \\0 69 1
-    \\1 0 69
-    \\
-    \\humidity-to-location map:
-    \\60 56 37
-    \\56 93 4
-;
+const input = @embedFile("./sample");
 // seed-to-soil is soil then seed value
 
 const Key = struct {
-    kind: S,
-    value: u8,
+    S,
+    u64,
 };
-var map: std.AutoHashMap(Key, u8) = undefined;
-var seeds: std.ArrayList(u8) = undefined;
+var map: std.AutoHashMap(Key, u64) = undefined;
+var seeds: std.ArrayList(u64) = undefined;
 var lastIdx: usize = undefined;
 
 pub fn main() void {
@@ -71,7 +37,8 @@ fn parseMaps(maps: []const u8) !void {
 /// This denotes the input type,
 /// e.g. `seed` to soil
 /// ```
-/// key = .{ .seed, 56 }
+/// // the key for a soil value where seed value is 56
+/// key = .{ .seed, 56 };
 /// ```
 const S = enum {
     seed,

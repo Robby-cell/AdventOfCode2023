@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <algorithm>
 #include <numeric>
 
 #include "./input"
@@ -80,12 +81,7 @@ auto main(void) -> int {
     transform(seeds, tth);
     transform(seeds, htl);
 
-    unsigned long min = -1;
-    for (auto i = std::begin(seeds); i != std::end(seeds); i += 1) {
-        if (*i < min)
-            min = *i;
-    }
-
+    unsigned long min = std::min_element(std::begin(seeds), std::end(seeds))[0];
     std::cout << min << std::endl;
 
     return 0;

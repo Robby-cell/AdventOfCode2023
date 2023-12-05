@@ -50,8 +50,8 @@ auto main(void) -> int {
     std::vector<FT> tth;
     std::vector<FT> htl;
 
-    size_t idx = input.find_first_of(':', 0) + 2;
-    currentChunk = input.substr(idx);
+    size_t idx = currentChunk.find_first_of(':', 0) + 2;
+    currentChunk = currentChunk.substr(idx);
 
     {
         std::stringstream ss{ currentChunk };

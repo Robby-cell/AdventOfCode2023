@@ -94,8 +94,8 @@ auto main(void) -> int {
 static auto transform(std::vector<unsigned long> &initial, std::vector<FT> &mappings) -> void {
     for (auto in = std::begin(initial); in != std::end(initial); ++in) {
         for (auto mp = std::begin(mappings); mp != std::end(mappings); ++mp) {
-            if (*in >= mp->fromStart and *in < mp->fromStart + mp->range) {
-                *in += mp->toStart - mp->fromStart;
+            if (mp->isIn(*in)) {
+                *in = mp->getVal(*in);
                 break;
             }
         }

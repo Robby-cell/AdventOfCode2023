@@ -2,6 +2,13 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <numeric>
+
+#include "./input"
+
+using std::size_t;
+
+std::string &currentChunk = input;
 
 struct FT {
     unsigned long toStart;
@@ -17,7 +24,6 @@ struct FT {
         toStart = to;
         fromStart = from;
         range = r;
-
     }
 
     bool isIn(unsigned long from) {
@@ -29,7 +35,12 @@ struct FT {
     }
 };
 
+static auto nextBlock(std::vector<FT> &) -> void;
+static auto transform(std::vector<unsigned long> &, std::vector<FT> &) -> void;
+
 auto main(void) -> int {
+    std::vector<unsigned long> seeds;
+
     std::vector<FT> sts;
     std::vector<FT> stf;
     std::vector<FT> ftw;
@@ -38,8 +49,78 @@ auto main(void) -> int {
     std::vector<FT> tth;
     std::vector<FT> htl;
 
-    FT f{ "50 98 2" };
-    std::cout << f.getVal(98) << std::endl;
+    size_t idx = input.find_first_of(':', 0) + 2;
+    currentChunk = input.substr(idx);
+
+    {
+        std::stringstream ss{ currentChunk };
+        unsigned long number;
+        while (ss >> number) {
+            seeds.push_back(number);
+        }
+    }
+
+    // too lazy to figure this out so i will fix the oob like this
+    try {
+        nextBlock(sts);
+        nextBlock(stf);
+        nextBlock(ftw);
+        nextBlock(wtl);
+        nextBlock(ltt);
+        nextBlock(tth);
+        nextBlock(htl);
+    } catch (...) {
+    }
+
+    transform(seeds, sts);
+    transform(seeds, stf);
+    transform(seeds, ftw);
+    transform(seeds, wtl);
+    transform(seeds, ltt);
+    transform(seeds, tth);
+    transform(seeds, htl);
+
+    unsigned long min = -1;
+    for (auto i = std::begin(seeds); i != std::end(seeds); i += 1) {
+        if (*i < min)
+            min = *i;
+    }
+
+    std::cout << min << std::endl;
 
     return 0;
+}
+
+static auto transform(std::vector<unsigned long> &initial, std::vector<FT> &mappings) -> void {
+    for (auto in = std::begin(initial); in != std::end(initial); ++in) {
+        for (auto mp = std::begin(mappings); mp != std::end(mappings); ++mp) {
+            if (*in >= mp->fromStart and *in < mp->fromStart + mp->range) {
+                *in += mp->toStart - mp->fromStart;
+                break;
+            }
+        }
+    }
+}
+
+static auto nextBlock(std::vector<FT> &vector) -> void {
+    // Move it to after the next colon.
+    currentChunk = currentChunk.substr(currentChunk.find_first_of(':', 0) + 2);
+    std::string currentLine;
+
+    size_t start = 0;
+
+    while (true) {
+        size_t nextNewLine;
+        nextNewLine = currentChunk.substr(start).find_first_of('\n', 0);
+
+        currentLine = currentChunk.substr(start, nextNewLine);
+        if (currentLine.length() < 1) break;
+
+        start += currentLine.length() + 1;
+
+        FT obj(currentLine);
+        vector.push_back(std::move(obj));
+    }
+
+    currentChunk = currentChunk.substr(start);
 }

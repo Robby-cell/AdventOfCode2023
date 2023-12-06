@@ -8,16 +8,17 @@
 #include "./input"
 
 using std::size_t;
+using ulong = unsigned long;
 
 std::string &currentChunk = input;
 
 struct FT {
-    unsigned long toStart;
-    unsigned long fromStart;
-    unsigned long range;
+    ulong toStart;
+    ulong fromStart;
+    ulong range;
 
     FT(std::string const &line) {
-        unsigned long to, from, r;
+        ulong to, from, r;
 
         // yes, sscanf, who cares
         sscanf(line.c_str(), "%ld %ld %ld", &to, &from, &r);
@@ -27,20 +28,20 @@ struct FT {
         range = r;
     }
 
-    bool isIn(unsigned long from) {
+    bool isIn(ulong from) {
         return (from >= fromStart)
             and (from < fromStart + range);
     }
-    unsigned long getVal(unsigned long from) {
+    ulong getVal(ulong from) {
         return from + toStart - fromStart;
     }
 };
 
 static auto nextBlock(std::vector<FT> &) -> void;
-static auto transform(std::vector<unsigned long> &, std::vector<FT> &) -> void;
+static auto transform(std::vector<ulong> &, std::vector<FT> &) -> void;
 
 auto main(void) -> int {
-    std::vector<unsigned long> seeds;
+    std::vector<ulong> seeds;
 
     std::vector<FT> sts;
     std::vector<FT> stf;
@@ -55,7 +56,7 @@ auto main(void) -> int {
 
     {
         std::stringstream ss{ currentChunk };
-        unsigned long number;
+        ulong number;
         while (ss >> number) {
             seeds.push_back(number);
         }
@@ -81,13 +82,13 @@ auto main(void) -> int {
     transform(seeds, tth);
     transform(seeds, htl);
 
-    unsigned long min = std::min_element(std::begin(seeds), std::end(seeds))[0];
+    ulong min = std::min_element(std::begin(seeds), std::end(seeds))[0];
     std::cout << min << std::endl;
 
     return 0;
 }
 
-static auto transform(std::vector<unsigned long> &initial, std::vector<FT> &mappings) -> void {
+static auto transform(std::vector<ulong> &initial, std::vector<FT> &mappings) -> void {
     for (auto in = std::begin(initial); in != std::end(initial); ++in) {
         for (auto mp = std::begin(mappings); mp != std::end(mappings); ++mp) {
             if (mp->isIn(*in)) {

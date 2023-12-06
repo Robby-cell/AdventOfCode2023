@@ -28,17 +28,17 @@ struct FT {
         range = r;
     }
 
-    bool isIn(ulong from) {
+    bool contains(ulong from) const {
         return (from >= fromStart)
             and (from < fromStart + range);
     }
-    ulong getVal(ulong from) {
+    ulong getVal(ulong from) const {
         return from + toStart - fromStart;
     }
 };
 
 static auto nextBlock(std::vector<FT> &) -> void;
-static auto transform(std::vector<ulong> &, std::vector<FT> &) -> void;
+static auto transform(std::vector<ulong> &, std::vector<FT> const &) -> void;
 
 auto main(void) -> int {
     std::vector<ulong> seeds;
@@ -88,10 +88,10 @@ auto main(void) -> int {
     return 0;
 }
 
-static auto transform(std::vector<ulong> &initial, std::vector<FT> &mappings) -> void {
+static auto transform(std::vector<ulong> &initial, std::vector<FT> const &mappings) -> void {
     for (auto in = std::begin(initial); in != std::end(initial); ++in) {
         for (auto mp = std::begin(mappings); mp != std::end(mappings); ++mp) {
-            if (mp->isIn(*in)) {
+            if (mp->contains(*in)) {
                 *in = mp->getVal(*in);
                 break;
             }

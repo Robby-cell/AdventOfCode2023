@@ -6,11 +6,11 @@
 
 // Hold a button for x ms, gives the boat x mm/ms speed for the rest of the race
 
-using u16 = unsigned short;
+using u64 = unsigned long long;
 
 std::string fileName = "day06/input.txt";
-static auto parseLine(std::string const &, std::vector<u16> &) -> void;
-static auto waysToBeat(u16 time, u16 distance) -> u16;
+static auto parseLine(std::string const &, std::vector<u64> &) -> void;
+static auto waysToBeat(u64 time, u64 distance) -> u64;
 
 auto main(void) -> int {
     std::string fileContents;
@@ -24,8 +24,8 @@ auto main(void) -> int {
         }
     }
 
-    std::vector<u16> time;
-    std::vector<u16> distance;
+    std::vector<u64> time;
+    std::vector<u64> distance;
 
     parseLine(fileContents, time);
     parseLine(fileContents.substr(fileContents.find_first_of('\n', 0) + 1), distance);
@@ -35,13 +35,35 @@ auto main(void) -> int {
         ways *= waysToBeat(time[i], distance[i]);
     }
 
-    std::cout << ways << std::endl;
+    std::cout << "part 1: " << ways << std::endl;
+
+    u64 trueTime, trueDistance;
+    {
+        std::stringstream tss;
+        for (u64 i = 0; i < time.size(); ++i)
+            tss << time[i];
+
+        std::stringstream dss;
+        for (u64 i = 0; i < distance.size(); ++i)
+            dss << distance[i];
+
+        std::string stime;
+        tss >> stime;
+        std::string sdist;
+        dss >> sdist;
+
+        trueTime = std::stoull(stime);
+        trueDistance = std::stoull(sdist);
+    }
+
+    u64 wayspart2 = waysToBeat(trueTime, trueDistance);
+    std::cout << "part 2: " << wayspart2 << std::endl;
 }
 
-static auto waysToBeat(u16 time, u16 distance) -> u16 {
-    u16 start, end;
-    auto lambda = [&](u16 conv, u16 &modifiee) -> bool {
-        u16 dist = conv * (time - conv);
+static auto waysToBeat(u64 time, u64 distance) -> u64 {
+    u64 start, end;
+    auto lambda = [&](u64 conv, u64 &modifiee) -> bool {
+        u64 dist = conv * (time - conv);
         if (dist > distance) {
             modifiee = conv;
             return true;
@@ -49,21 +71,21 @@ static auto waysToBeat(u16 time, u16 distance) -> u16 {
         return false;
         };
 
-    for (u16 converge = 0; converge <= time; ++converge) {
+    for (u64 converge = 0; converge <= time; ++converge) {
         if (lambda(converge, start)) break;
     }
-    for (u16 converge = time; converge >= 0; --converge) {
+    for (u64 converge = time; converge >= 0; --converge) {
         if (lambda(converge, end)) break;
     }
 
     return end + 1 - start;
 }
 
-static auto parseLine(std::string const &line, std::vector<u16> &vec) -> void {
+static auto parseLine(std::string const &line, std::vector<u64> &vec) -> void {
     std::stringstream ss;
     ss << line.substr(line.find_first_of(':', 0) + 1);
 
-    u16 number;
+    u64 number;
     while (ss >> number)
         vec.push_back(number);
 }

@@ -52,8 +52,8 @@ auto main(void) -> int {
         std::string sdist;
         dss >> sdist;
 
-        trueTime = std::stoull(stime);
-        trueDistance = std::stoull(sdist);
+        trueTime = std::stoul(stime);
+        trueDistance = std::stoul(sdist);
     }
 
     u64 wayspart2 = waysToBeat(trueTime, trueDistance);

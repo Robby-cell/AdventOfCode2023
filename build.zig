@@ -5,8 +5,7 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     @"add zig"(1, 4, b, target, optimize);
-    @"add cpp"(5, b, target, optimize);
-    @"add cpp"(6, b, target, optimize);
+    @"add cpp"(5, 7, b, target, optimize);
 }
 
 fn @"add zig"(
@@ -23,35 +22,38 @@ fn @"add zig"(
 }
 
 fn @"add cpp"(
-    dayNumber: u5,
+    from: u5,
+    to: u5,
     b: *std.Build,
     target: std.zig.CrossTarget,
     optimize: std.builtin.OptimizeMode,
 ) void {
-    const path = b.fmt("day{d:0>2}", .{dayNumber});
-    const root = b.fmt("{s}/main.cpp", .{path});
-    const exe = b.addExecutable(.{
-        .name = path,
-        .root_source_file = .{ .path = root },
-        .target = target,
-        .optimize = optimize,
-    });
-    exe.linkLibCpp();
+    for (from..to + 1) |dayNumber| {
+        const path = b.fmt("day{d:0>2}", .{dayNumber});
+        const root = b.fmt("{s}/main.cpp", .{path});
+        const exe = b.addExecutable(.{
+            .name = path,
+            .root_source_file = .{ .path = root },
+            .target = target,
+            .optimize = optimize,
+        });
+        exe.linkLibCpp();
 
-    b.installArtifact(exe);
+        b.installArtifact(exe);
 
-    const install_step = b.step(path, "Build the specified day");
-    install_step.dependOn(b.getInstallStep());
+        const install_step = b.step(path, "Build the specified day");
+        install_step.dependOn(b.getInstallStep());
 
-    const run_cmd = b.addRunArtifact(exe);
-    run_cmd.step.dependOn(install_step);
+        const run_cmd = b.addRunArtifact(exe);
+        run_cmd.step.dependOn(install_step);
 
-    if (b.args) |args| {
-        run_cmd.addArgs(args);
+        if (b.args) |args| {
+            run_cmd.addArgs(args);
+        }
+
+        const run_step = b.step(b.fmt("run_{s}", .{path}), "Run the specified day");
+        run_step.dependOn(&run_cmd.step);
     }
-
-    const run_step = b.step(b.fmt("run_{s}", .{path}), "Run the specified day");
-    run_step.dependOn(&run_cmd.step);
 }
 
 fn setupDay(b: *std.Build, target: std.zig.CrossTarget, optimize: std.builtin.OptimizeMode, dayNumber: u5) void {

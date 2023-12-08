@@ -5,7 +5,8 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     @"add zig"(1, 4, b, target, optimize);
-    @"add cpp"(5, 7, b, target, optimize);
+    @"add cpp"(5, 6, b, target, optimize);
+    @"add zig"(7, 7, b, target, optimize);
 }
 
 fn @"add zig"(

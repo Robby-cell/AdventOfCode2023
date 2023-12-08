@@ -156,7 +156,7 @@ const Lexer = struct {
     fn bumpLetter(self: *Lexer) ?u8 {
         const next = self.bump() orelse 255;
         switch (next) {
-            'A'...'Z', '0'...'9' => return next,
+            'A'...'Z' => return next,
             else => return null,
         }
     }
@@ -180,7 +180,7 @@ const Lexer = struct {
             switch (self.current() orelse 255) {
                 255 => return Error.OutOfBuffer,
 
-                'A'...'Z', '0'...'9' => {
+                'A'...'Z' => {
                     const start = self.index;
                     while (self.bumpLetter()) |_| {}
                     const end = self.index;
@@ -280,8 +280,6 @@ const SubPoint = enum {
     X,
     Y,
     Z,
-    @"1",
-    @"2",
 
     fn from_u8(@"u8": u8) SubPoint {
         return std.meta.stringToEnum(SubPoint, &.{@"u8"}).?;

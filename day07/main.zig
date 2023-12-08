@@ -6,16 +6,18 @@ const input = @embedFile("./sample.txt");
 const WhatCanGoWrong: type = Hand.HandCreationError || std.mem.Allocator.Error;
 
 pub fn main() WhatCanGoWrong!void {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-    const allocator = arena.allocator();
+    var gpa: std.heap.GeneralPurposeAllocator(.{}) = .{};
+    defer if (gpa.deinit() == .leak) std.debug.print("Oops!! Memory leak!!\n", .{});
+    const allocator = gpa.allocator();
 
     var lines = std.mem.tokenizeScalar(u8, input, '\n');
     var hands = ArrayList(Hand).init(allocator);
     defer hands.deinit();
 
-    while (lines.next()) |line| {
-        const hand = try Hand.init(line);
+    var ranking: u32 = 1;
+    while (lines.next()) |line| : (ranking += 1) {
+        var hand = try Hand.init(line);
+        hand.rank = ranking;
         try hands.append(hand);
     }
 
@@ -27,6 +29,7 @@ pub fn main() WhatCanGoWrong!void {
 const Hand = struct {
     cards: Cards,
     stake: u10,
+    rank: u32 = undefined,
 
     const HandCreationError = error{
         @"missing labels",

@@ -39,47 +39,48 @@ pub fn main() GlobalError!void {
 
         try map.put(mapping.at, mapping.options);
     }
-    var step: usize = 0;
-    var current: Point = @"part 1 start";
-    var @"part 1 solved" = false;
 
     for (nodes.items) |node| {
         std.debug.print("{any}\n", .{node});
     }
 
-    while (!@"part 1 solved") {
-        const dir = turns.next();
-
-        if (!@"part 1 solved") {
-            current = map.get(current).?.@"with direction"(dir);
-            if (std.meta.eql(current, target)) {
-                @"part 1 solved" = true;
-            }
+    const part1 = solve(&turns, @"part 1 start", &map, struct {
+        fn callback(point: Point) bool {
+            return std.meta.eql(point, target);
         }
-        step += 1;
-    }
+    }.callback);
 
     const attempts = try allocator.alloc(u64, nodes.items.len);
     for (attempts, nodes.items) |*attempt, node| {
-        turns.index = 0;
-        var counter: usize = 0;
-        var currentNode = node;
+        const count = solve(&turns, node, &map, struct {
+            fn callback(point: Point) bool {
+                return point.@"3" == .Z;
+            }
+        }.callback);
 
-        while (currentNode.@"3" != .Z) {
-            const dir = turns.next();
-            currentNode = map.get(currentNode).?.@"with direction"(dir);
-            counter += 1;
-        }
-
-        attempt.* = counter;
+        attempt.* = count;
     }
 
-    var end = @"lowest common multiple"(attempts[0], attempts[1]);
+    var part2 = @"lowest common multiple"(attempts[0], attempts[1]);
     for (attempts[2..]) |attempt| {
-        end = @"lowest common multiple"(end, attempt);
+        part2 = @"lowest common multiple"(part2, attempt);
     }
 
-    std.debug.print("{d} attemps for part 1.\n{d} attempts for part 2, oof!\n", .{ step, end });
+    std.debug.print("{d} attemps for part 1.\n{d} attempts for part 2, oof!\n", .{ part1, part2 });
+}
+
+fn solve(turns: *Turns, node: Point, map: *const std.AutoHashMap(Point, Options), callback: *const fn (Point) bool) u64 {
+    turns.index = 0;
+    var counter: usize = 0;
+    var currentNode = node;
+
+    while (!callback(currentNode)) {
+        const dir = turns.next();
+        currentNode = map.get(currentNode).?.@"with direction"(dir);
+        counter += 1;
+    }
+
+    return counter;
 }
 
 fn @"lowest common multiple"(a: u64, b: u64) u64 {

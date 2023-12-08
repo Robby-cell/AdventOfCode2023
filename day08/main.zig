@@ -11,6 +11,7 @@ const input = @embedFile("./input.txt");
 
 /// Target: ZZZ
 const target: Point = .{ .@"1" = .Z, .@"2" = .Z, .@"3" = .Z };
+const @"part 1 start": Point = .{ .@"1" = .A, .@"2" = .A, .@"3" = .A };
 
 const GlobalError = Lexer.YieldError || std.mem.Allocator.Error;
 
@@ -26,22 +27,74 @@ pub fn main() GlobalError!void {
     var map = std.AutoHashMap(Point, Options).init(allocator);
     defer map.deinit();
 
+    // part 2
+    var nodes = std.ArrayList(Point).init(allocator);
+    defer nodes.deinit();
+
     var lexer = Lexer.init(input[newlineChar..]);
     while (true) {
         const mapping = lexer.yield() catch break;
+        if (mapping.at.@"3" == .A)
+            try nodes.append(mapping.at);
+
         try map.put(mapping.at, mapping.options);
     }
     var step: usize = 0;
-    var current: Point = .{ .@"1" = .A, .@"2" = .A, .@"3" = .A };
+    var current: Point = @"part 1 start";
+    var @"part 1 solved" = false;
 
-    while (!std.meta.eql(current, target)) {
+    for (nodes.items) |node| {
+        std.debug.print("{any}\n", .{node});
+    }
+
+    while (!@"part 1 solved") {
         const dir = turns.next();
 
-        current = map.get(current).?.@"with direction"(dir);
+        if (!@"part 1 solved") {
+            current = map.get(current).?.@"with direction"(dir);
+            if (std.meta.eql(current, target)) {
+                @"part 1 solved" = true;
+            }
+        }
         step += 1;
     }
 
-    std.debug.print("{d} attempts, oof!\n", .{step});
+    const attempts = try allocator.alloc(u64, nodes.items.len);
+    for (attempts, nodes.items) |*attempt, node| {
+        turns.index = 0;
+        var counter: usize = 0;
+        var currentNode = node;
+
+        while (currentNode.@"3" != .Z) {
+            const dir = turns.next();
+            currentNode = map.get(currentNode).?.@"with direction"(dir);
+            counter += 1;
+        }
+
+        attempt.* = counter;
+    }
+
+    var end = @"lowest common multiple"(attempts[0], attempts[1]);
+    for (attempts[2..]) |attempt| {
+        end = @"lowest common multiple"(end, attempt);
+    }
+
+    std.debug.print("{d} attemps for part 1.\n{d} attempts for part 2, oof!\n", .{ step, end });
+}
+
+fn @"lowest common multiple"(a: u64, b: u64) u64 {
+    return a * b / @"greatest common divisor"(a, b);
+}
+
+fn @"greatest common divisor"(a: u64, b: u64) u64 {
+    var x = a;
+    var y = b;
+    return blk: while (true) {
+        if (y == 0) break :blk x;
+        const x1 = a;
+        x = y;
+        y = x1 % y;
+    };
 }
 
 const Direction = enum { L, R };
@@ -103,7 +156,7 @@ const Lexer = struct {
     fn bumpLetter(self: *Lexer) ?u8 {
         const next = self.bump() orelse 255;
         switch (next) {
-            'A'...'Z' => return next,
+            'A'...'Z', '0'...'9' => return next,
             else => return null,
         }
     }
@@ -127,7 +180,7 @@ const Lexer = struct {
             switch (self.current() orelse 255) {
                 255 => return Error.OutOfBuffer,
 
-                'A'...'Z' => {
+                'A'...'Z', '0'...'9' => {
                     const start = self.index;
                     while (self.bumpLetter()) |_| {}
                     const end = self.index;
@@ -227,6 +280,8 @@ const SubPoint = enum {
     X,
     Y,
     Z,
+    @"1",
+    @"2",
 
     fn from_u8(@"u8": u8) SubPoint {
         return std.meta.stringToEnum(SubPoint, &.{@"u8"}).?;

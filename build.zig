@@ -1,12 +1,14 @@
 const std = @import("std");
 
+const day = 8;
+
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    @"add zig"(1, 8, b, target, optimize);
-    @"add cpp"(1, 8, b, target, optimize);
-    @"add c"(1, 8, b, target, optimize);
+    @"add zig"(1, day, b, target, optimize);
+    @"add cpp"(1, day, b, target, optimize);
+    @"add c"(1, day, b, target, optimize);
 }
 
 fn @"add zig"(

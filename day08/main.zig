@@ -9,6 +9,9 @@ const std = @import("std");
 
 const input = @embedFile("./input.txt");
 
+/// Target: ZZZ
+const target: Point = .{ .@"1" = .Z, .@"2" = .Z, .@"3" = .Z };
+
 const GlobalError = Lexer.YieldError || std.mem.Allocator.Error;
 
 pub fn main() GlobalError!void {
@@ -28,7 +31,17 @@ pub fn main() GlobalError!void {
         const mapping = lexer.yield() catch break;
         try map.put(mapping.at, mapping.options);
     }
-    std.debug.print("{any}\n", .{map.get(.{ .@"1" = .N, .@"2" = .Q, .@"3" = .T }).?});
+    var step: usize = 0;
+    var current: Point = .{ .@"1" = .A, .@"2" = .A, .@"3" = .A };
+
+    while (!std.meta.eql(current, target)) {
+        const dir = turns.next();
+
+        current = map.get(current).?.@"with direction"(dir);
+        step += 1;
+    }
+
+    std.debug.print("{d} attempts, oof!\n", .{step});
 }
 
 const Direction = enum { L, R };
@@ -143,6 +156,13 @@ const Lexer = struct {
 const Options = struct {
     left: Point,
     right: Point,
+
+    fn @"with direction"(self: Options, dir: Direction) Point {
+        return switch (dir) {
+            .L => self.left,
+            .R => self.right,
+        };
+    }
 };
 
 const Mapping = struct {

@@ -6,7 +6,7 @@ pub fn build(b: *std.Build) void {
 
     @"add zig"(1, 4, b, target, optimize);
     @"add cpp"(5, 6, b, target, optimize);
-    @"add zig"(7, 7, b, target, optimize);
+    @"add zig"(7, 8, b, target, optimize);
 }
 
 fn @"add zig"(

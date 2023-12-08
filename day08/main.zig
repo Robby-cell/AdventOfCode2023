@@ -51,6 +51,8 @@ pub fn main() GlobalError!void {
     }.callback);
 
     const attempts = try allocator.alloc(u64, nodes.items.len);
+    defer allocator.free(attempts);
+
     for (attempts, nodes.items) |*attempt, node| {
         const count = solve(&turns, node, &map, struct {
             fn callback(point: Point) bool {

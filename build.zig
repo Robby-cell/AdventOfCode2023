@@ -75,7 +75,7 @@ fn @"add c"(
             .target = target,
             .optimize = optimize,
         });
-        exe.linkLibCpp();
+        exe.linkLibC();
 
         b.installArtifact(exe);
 

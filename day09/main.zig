@@ -10,17 +10,19 @@ pub fn main() !void {
 
     var linesIter = std.mem.tokenizeScalar(u8, input, '\n');
 
-    var total: isize = 0;
+    var totalAhead: isize = 0;
+    var totalBehind: isize = 0;
+
     while (linesIter.next()) |line| {
-        const number = try nextNumber(line, allocator);
-        total += number;
-        std.debug.print("{d}\n", .{number});
+        const numbers = try nextNumber(line, allocator);
+        totalAhead += numbers.next;
+        totalBehind += numbers.reverse;
     }
 
-    std.debug.print("\nanswer part 1: {d}\n", .{total});
+    std.debug.print("\nanswer part 1: {d}\nanswer part 2: {d}\n", .{ totalAhead, totalBehind });
 }
 
-fn nextNumber(line: []const u8, allocator: Allocator) ParseStageError!i64 {
+fn nextNumber(line: []const u8, allocator: Allocator) ParseStageError!struct { reverse: i64, next: i64 } {
     const numbers = try parseLine(line, allocator);
     defer allocator.free(numbers);
 
@@ -47,8 +49,22 @@ fn nextNumber(line: []const u8, allocator: Allocator) ParseStageError!i64 {
         const endOfBlock = memory[i].len - 1;
         root += memory[i][endOfBlock];
     }
+    const keyIdx = loop: for (memory, 0..) |item, keyIdx| {
+        const value = item[0];
+        for (item) |n| {
+            if (n != value)
+                continue :loop;
+        }
+        break :loop keyIdx;
+    } else unreachable;
+    var reverseIdx = keyIdx;
+    var reverseRoot: isize = memory[keyIdx][0];
+    while (reverseIdx > 0) : (reverseIdx -= 1) {
+        const dodgyNumber = memory[reverseIdx - 1][0];
+        reverseRoot = dodgyNumber - reverseRoot;
+    }
 
-    return numbers[numbers.len - 1] + root;
+    return .{ .reverse = reverseRoot, .next = numbers[numbers.len - 1] + root };
 }
 
 const ParseStageError = std.mem.Allocator.Error || std.fmt.ParseIntError;

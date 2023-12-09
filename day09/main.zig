@@ -4,9 +4,9 @@ const Allocator = std.mem.Allocator;
 const input = @embedFile("./input.txt");
 
 pub fn main() !void {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-    const allocator = arena.allocator();
+    var gpa: std.heap.GeneralPurposeAllocator(.{}) = .{};
+    defer if (gpa.deinit() == .leak) std.debug.print("memory leak\n", .{});
+    const allocator = gpa.allocator();
 
     var linesIter = std.mem.tokenizeScalar(u8, input, '\n');
 
@@ -39,6 +39,7 @@ fn nextNumber(line: []const u8, allocator: Allocator) ParseStageError!i64 {
         block.* = memoryBlock;
         memoryRequired -= 1;
     }
+    defer for (memory[1..]) |memBlk| allocator.free(memBlk);
 
     var root: isize = 0;
     var i = memory.len - 1;

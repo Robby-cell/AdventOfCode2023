@@ -51,15 +51,14 @@ int main(void) {
             for (unsigned j = 1; j < numberCount - i; ++j) {
                 if (numbers[indexOf(i, j)] != number)
                     goto nextIteration;
-                keyNumber = i;
-                goto exit_loop;
-            }
+				}
+			keyNumber = i;
+			goto exit_loop;
+
         nextIteration:
 			__asm __volatile("nop");
         }
     exit_loop:
-        p2_delta = firstInLine(numbers, keyNumber);
-
         // part 1:
         for (int i = numberCount - 1; i >= 0; --i) {
             i64 lastItem = lastInLine(numbers, i);
@@ -67,18 +66,16 @@ int main(void) {
         }
 
         // part 2:
-        //for (int i = keyNumber - 1; i >= 0; --i) {
-        //    p2_delta = firstInLine(numbers, i) - p2_delta;
-        //}
-		for (int i = keyNumber - 1; i > 0; --i)
-			p2_delta = firstInLine(numbers, i) - p2_delta;
-		// p2_delta = numbers[0] - p2_delta;
+        for (int i = keyNumber; i >= 0; --i)
+            p2_delta = firstInLine(numbers, i) - p2_delta;
 
         part1 += p1_delta;
         part2 += p2_delta;
 
 #ifdef _DEBUG
 	for (unsigned i = 0; i < numberCount; ++i) {
+		if (i == keyNumber)
+			fprintf(stderr, "key: ");
 		for (unsigned j = 0; j < numberCount - i; ++j) {
 			fprintf(stderr, "%ld ", numbers[indexOf(i, j)]);
 		}
@@ -114,7 +111,7 @@ static i64 *lineToNums(char const *line) {
     numberCount = 0;
 
     for (;;) {
-        if (isdigit(*line)) {
+        if (isdigit(*line) || *line == '-') {
             do
                 ++line;
             while (isdigit(*line));
@@ -137,8 +134,9 @@ static i64 *lineToNums(char const *line) {
             // i64 number = *line - 0x30;
             i64 number = 0;
             sscanf(line, "%ld", &number);
-            while (isdigit(*line))
+			do
                 ++line;
+            while (isdigit(*line));
 
             numbers[idx] = number;
             ++idx;

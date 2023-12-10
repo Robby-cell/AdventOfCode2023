@@ -24,7 +24,7 @@ int main(void) {
     }
 
     i64 part1 = 0, part2 = 0;
-    char *currentLine = buffer;
+    char *currentLine = (char*)buffer;
     for (;;) {
         char const *const nextStartIdx = strstr(currentLine, "\n");
 
@@ -55,6 +55,7 @@ int main(void) {
                 goto exit_loop;
             }
         nextIteration:
+			__asm __volatile("nop");
         }
     exit_loop:
         p2_delta = firstInLine(numbers, keyNumber);
@@ -66,18 +67,34 @@ int main(void) {
         }
 
         // part 2:
-        for (int i = keyNumber - 1; i >= 0; --i) {
-            p2_delta = firstInLine(numbers, i) - p2_delta;
-        }
+        //for (int i = keyNumber - 1; i >= 0; --i) {
+        //    p2_delta = firstInLine(numbers, i) - p2_delta;
+        //}
+		for (int i = keyNumber - 1; i > 0; --i)
+			p2_delta = firstInLine(numbers, i) - p2_delta;
+		// p2_delta = numbers[0] - p2_delta;
 
         part1 += p1_delta;
         part2 += p2_delta;
+
+#ifdef _DEBUG
+	for (unsigned i = 0; i < numberCount; ++i) {
+		for (unsigned j = 0; j < numberCount - i; ++j) {
+			fprintf(stderr, "%ld ", numbers[indexOf(i, j)]);
+		}
+		puts("");
+	}
+
+	fprintf(stderr, "back: %ld, forward: %ld\n", p2_delta, p1_delta);
+#endif
+
+
 
         free(numbers);
 
         if (!nextStartIdx)
             break;
-        currentLine = nextStartIdx + 1;
+        currentLine = (char*)nextStartIdx + 1;
     }
 
     // display answer:
@@ -85,7 +102,7 @@ int main(void) {
 
 cleanup:
     if (buffer)
-        free(buffer);
+        free((void*)buffer);
 
     return status;
 }
@@ -116,7 +133,7 @@ static i64 *lineToNums(char const *line) {
     line = original;
     int idx = 0;
     for (;;) {
-        if (isdigit(*line)) {
+        if (isdigit(*line) || *line == '-') {
             // i64 number = *line - 0x30;
             i64 number = 0;
             sscanf(line, "%ld", &number);
@@ -161,6 +178,7 @@ static int readFile(void) {
     }
 
     unsigned _read = fread((void *)buffer, 1, length, fp);
+#pragma unused(_read)
 
 cleanup:
     if (fp)

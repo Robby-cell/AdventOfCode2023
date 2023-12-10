@@ -24,7 +24,7 @@ int main(void) {
     }
 
     i64 part1 = 0, part2 = 0;
-    char *currentLine = (char*)buffer;
+    char *currentLine = (char *) buffer;
     for (;;) {
         char const *const nextStartIdx = strstr(currentLine, "\n");
 
@@ -51,12 +51,12 @@ int main(void) {
             for (unsigned j = 1; j < numberCount - i; ++j) {
                 if (numbers[indexOf(i, j)] != number)
                     goto nextIteration;
-				}
-			keyNumber = i;
-			goto exit_loop;
+            }
+            keyNumber = i;
+            goto exit_loop;
 
         nextIteration:
-			__asm __volatile("nop");
+            __asm __volatile("nop");
         }
     exit_loop:
         // part 1:
@@ -73,16 +73,16 @@ int main(void) {
         part2 += p2_delta;
 
 #ifdef _DEBUG
-	for (unsigned i = 0; i < numberCount; ++i) {
-		if (i == keyNumber)
-			fprintf(stderr, "key: ");
-		for (unsigned j = 0; j < numberCount - i; ++j) {
-			fprintf(stderr, "%ld ", numbers[indexOf(i, j)]);
-		}
-		puts("");
-	}
+        for (unsigned i = 0; i < numberCount; ++i) {
+            if (i == keyNumber)
+                fprintf(stderr, "key: ");
+            for (unsigned j = 0; j < numberCount - i; ++j) {
+                fprintf(stderr, "%ld ", numbers[indexOf(i, j)]);
+            }
+            puts("");
+        }
 
-	fprintf(stderr, "back: %ld, forward: %ld\n", p2_delta, p1_delta);
+        fprintf(stderr, "back: %ld, forward: %ld\n", p2_delta, p1_delta);
 #endif
 
 
@@ -91,7 +91,7 @@ int main(void) {
 
         if (!nextStartIdx)
             break;
-        currentLine = (char*)nextStartIdx + 1;
+        currentLine = (char *) nextStartIdx + 1;
     }
 
     // display answer:
@@ -99,7 +99,7 @@ int main(void) {
 
 cleanup:
     if (buffer)
-        free((void*)buffer);
+        free((void *) buffer);
 
     return status;
 }
@@ -123,7 +123,7 @@ static i64 *lineToNums(char const *line) {
 
         ++line;
     }
-    numbers = (i64 *)malloc((((numberCount + 1) * numberCount) >> 1) * sizeof(i64));
+    numbers = (i64 *) malloc((((numberCount + 1) * numberCount) >> 1) * sizeof(i64));
     if (!numbers)
         return NULL;
 
@@ -134,7 +134,7 @@ static i64 *lineToNums(char const *line) {
             // i64 number = *line - 0x30;
             i64 number = 0;
             sscanf(line, "%ld", &number);
-			do
+            do
                 ++line;
             while (isdigit(*line));
 
@@ -169,16 +169,16 @@ static int readFile(void) {
         goto cleanup;
     }
 
-    buffer = (char *)malloc(length * sizeof(char));
+    buffer = (char *) malloc(length * sizeof(char));
     if (!buffer) {
         status = 0;
         goto cleanup;
     }
 
-    unsigned _read = fread((void *)buffer, 1, length, fp);
+    unsigned _read = fread((void *) buffer, 1, length, fp);
 #pragma unused(_read)
 
-cleanup:
+    cleanup:
     if (fp)
         fclose(fp);
 

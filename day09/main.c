@@ -66,10 +66,9 @@ int main(void) {
         }
 
         // part 2:
-        for (int i = keyNumber - 1; i > 0; --i) {
-            p2_delta += firstInLine(numbers, i);
+        for (int i = keyNumber - 1; i >= 0; --i) {
+            p2_delta = firstInLine(numbers, i) - p2_delta;
         }
-        p2_delta = firstInLine(numbers, 0) - p2_delta;
 
         part1 += p1_delta;
         part2 += p2_delta;

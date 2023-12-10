@@ -161,7 +161,7 @@ static int readFile(void) {
         goto cleanup;
     }
 
-    unsigned _read = fread(buffer, 1, length, fp);
+    unsigned _read = fread((void *)buffer, 1, length, fp);
 
 cleanup:
     if (fp)

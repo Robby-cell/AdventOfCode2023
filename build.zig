@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const day = 11;
+const day = 12;
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});

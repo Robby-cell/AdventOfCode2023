@@ -1,14 +1,22 @@
 const std = @import("std");
 
-const day = 12;
+const zig: []const [2]u5 = &.{.{ 1, 12 }};
+const c: []const [2]u5 = &.{.{ 1, 12 }};
+const cpp: []const [2]u5 = &.{.{ 1, 12 }};
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    @"add zig"(1, day, b, target, optimize);
-    @"add cpp"(1, day, b, target, optimize);
-    @"add c"(1, day, b, target, optimize);
+    inline for (zig) |tuple| {
+        @"add zig"(tuple[0], tuple[1], b, target, optimize);
+    }
+    inline for (zig) |tuple| {
+        @"add c"(tuple[0], tuple[1], b, target, optimize);
+    }
+    inline for (zig) |tuple| {
+        @"add cpp"(tuple[0], tuple[1], b, target, optimize);
+    }
 }
 
 fn @"add zig"(
@@ -18,9 +26,15 @@ fn @"add zig"(
     target: std.zig.CrossTarget,
     optimize: std.builtin.OptimizeMode,
 ) void {
-    comptime var dayNumber = from;
-    inline while (dayNumber <= to) : (dayNumber += 1) {
-        setupDay(b, target, optimize, dayNumber);
+    inline for (from..to + 1) |dayNumber| {
+        setupDay(
+            b,
+            target,
+            optimize,
+            dayNumber,
+            "zig",
+            null,
+        );
     }
 }
 
@@ -32,30 +46,18 @@ fn @"add cpp"(
     optimize: std.builtin.OptimizeMode,
 ) void {
     inline for (from..to + 1) |dayNumber| {
-        const path = b.fmt("day{d:0>2}", .{dayNumber});
-        const root = b.fmt("{s}/main.cpp", .{path});
-        const exe = b.addExecutable(.{
-            .name = b.fmt("{s}cpp", .{path}),
-            .root_source_file = .{ .path = root },
-            .target = target,
-            .optimize = optimize,
-        });
-        exe.linkLibCpp();
-
-        b.installArtifact(exe);
-
-        const install_step = b.step(b.fmt("{s}cpp", .{path}), "Build the specified day");
-        install_step.dependOn(b.getInstallStep());
-
-        const run_cmd = b.addRunArtifact(exe);
-        run_cmd.step.dependOn(install_step);
-
-        if (b.args) |args| {
-            run_cmd.addArgs(args);
-        }
-
-        const run_step = b.step(b.fmt("cpp_{s}", .{path}), "Run the specified day");
-        run_step.dependOn(&run_cmd.step);
+        setupDay(
+            b,
+            target,
+            optimize,
+            dayNumber,
+            "cpp",
+            struct {
+                fn callback(exe: *std.Build.Step.Compile) void {
+                    exe.linkLibCpp();
+                }
+            }.callback,
+        );
     }
 }
 
@@ -67,45 +69,42 @@ fn @"add c"(
     optimize: std.builtin.OptimizeMode,
 ) void {
     inline for (from..to + 1) |dayNumber| {
-        const path = b.fmt("day{d:0>2}", .{dayNumber});
-        const root = b.fmt("{s}/main.c", .{path});
-        const exe = b.addExecutable(.{
-            .name = b.fmt("{s}c", .{path}),
-            .root_source_file = .{ .path = root },
-            .target = target,
-            .optimize = optimize,
-        });
-        exe.linkLibC();
-
-        b.installArtifact(exe);
-
-        const install_step = b.step(b.fmt("{s}c", .{path}), "Build the specified day");
-        install_step.dependOn(b.getInstallStep());
-
-        const run_cmd = b.addRunArtifact(exe);
-        run_cmd.step.dependOn(install_step);
-
-        if (b.args) |args| {
-            run_cmd.addArgs(args);
-        }
-
-        const run_step = b.step(b.fmt("c_{s}", .{path}), "Run the specified day");
-        run_step.dependOn(&run_cmd.step);
+        setupDay(
+            b,
+            target,
+            optimize,
+            dayNumber,
+            "c",
+            struct {
+                fn callback(exe: *std.Build.Step.Compile) void {
+                    exe.linkLibC();
+                }
+            }.callback,
+        );
     }
 }
 
-fn setupDay(b: *std.Build, target: std.zig.CrossTarget, optimize: std.builtin.OptimizeMode, dayNumber: u5) void {
+fn setupDay(
+    b: *std.Build,
+    target: std.zig.CrossTarget,
+    optimize: std.builtin.OptimizeMode,
+    dayNumber: u5,
+    @"type": []const u8,
+    maybeCallback: ?*const fn (*std.Build.Step.Compile) void,
+) void {
     const path = b.fmt("day{d:0>2}", .{dayNumber});
-    const root = b.fmt("{s}/main.zig", .{path});
+    const root = b.fmt("{s}/main.{s}", .{ path, @"type" });
     const exe = b.addExecutable(.{
-        .name = b.fmt("{s}zig", .{path}),
+        .name = b.fmt("{s}{s}", .{ path, @"type" }),
         .root_source_file = .{ .path = root },
         .target = target,
         .optimize = optimize,
     });
+    if (maybeCallback) |callback|
+        callback(exe);
 
     b.installArtifact(exe);
-    const install_step = b.step(b.fmt("{s}zig", .{path}), "Build the specified day");
+    const install_step = b.step(b.fmt("{s}{s}", .{ path, @"type" }), "Build the specified day");
     install_step.dependOn(b.getInstallStep());
 
     const run_cmd = b.addRunArtifact(exe);
@@ -115,7 +114,7 @@ fn setupDay(b: *std.Build, target: std.zig.CrossTarget, optimize: std.builtin.Op
         run_cmd.addArgs(args);
     }
 
-    const run_step = b.step(b.fmt("zig_{s}", .{path}), "Run the specified day");
+    const run_step = b.step(b.fmt("{s}_{s}", .{ @"type", path }), "Run the specified day");
     run_step.dependOn(&run_cmd.step);
 
     // const test_cmd = b.addTest(.{

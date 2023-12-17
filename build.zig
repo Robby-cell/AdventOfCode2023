@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const zig: []const [2]u5 = &.{.{ 1, 12 }};
+const zig: []const [2]u5 = &.{ .{ 1, 12 }, .{ 15, 15 } };
 const c: []const [2]u5 = &.{.{ 1, 12 }};
 const cpp: []const [2]u5 = &.{.{ 1, 12 }};
 
@@ -11,10 +11,10 @@ pub fn build(b: *std.Build) void {
     inline for (zig) |tuple| {
         @"add zig"(tuple[0], tuple[1], b, target, optimize);
     }
-    inline for (zig) |tuple| {
+    inline for (c) |tuple| {
         @"add c"(tuple[0], tuple[1], b, target, optimize);
     }
-    inline for (zig) |tuple| {
+    inline for (cpp) |tuple| {
         @"add cpp"(tuple[0], tuple[1], b, target, optimize);
     }
 }

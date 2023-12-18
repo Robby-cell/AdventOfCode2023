@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const zig: []const [2]u5 = &.{ .{ 1, 12 }, .{ 15, 15 } };
+const zig: []const [2]u5 = &.{ .{ 1, 12 }, .{ 15, 15 }, .{ 18, 18 } };
 const c: []const [2]u5 = &.{.{ 1, 12 }};
 const cpp: []const [2]u5 = &.{.{ 1, 12 }};
 
